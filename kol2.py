@@ -1,76 +1,91 @@
-# Class diary  
-#
-# Create program for handling lesson scores.
-# Use python to handle student (highscool) class scores, and attendance.
-# Make it possible to:
-# - Get students total average score (average across classes)
-# - get students average score in class
-# - hold students name and surname
-# - Count total attendance of student
-# The default interface for interaction should be python interpreter.
-# Please, use your imagination and create more functionalities. 
-# Your project should be able to handle entire school.
-# If you have enough courage and time, try storing (reading/writing) 
-# data in text files (YAML, JSON).
-# If you have even more courage, try implementing user interface.
-
 #!#!usr/bin/env python2.7
-
-class Student:
-    
-    
-    def __init__(self, name, surname, id):
-		self.name = name
-		self.surname = surname
-		self.id = id
-		self.subjects_ids = []
-		self.average = 0
+import json
+import sys
+#first word from console will be used as filename!
 
 
-class Diary:
-	
+class Class(object):
+	def __init__(self, subjects, students):
+		self.register = {}
+		for i in students:
+			for j in subjects:
+			 self.register[i]={j:{"grades":[],"presence":[]}}
+			
 
-	def __init__(self, school_name):
-		self.school_name = school_name
-		self.number_of_students = 0
-		self.number_of_subjects = 0
-		self.subjects = []
-		self.students = [] 
-	
-	def get_average_from_subject(self,subject_id):
-		tmp = self.subjects[subject_id].grades
-		ret = 0		
+	def add_grade(self, id, subject, grade):
+		self.register[id][subject]["grades"].append(grade)
 
-		for row in range (len(tmp)):
-    		for col in range(len(tmp[0])):
-				ret += tmp[row][col]
-		return ret/(len(self.subjects[subject_id].students_ids)*number_of
-	
-	def get_average_for_student(self):
-		pass
+	def check_presence(self, id, subject, presence):
+		self.register[id][subject]["presence"].append(presence)
 
-class Subject:
+	def student_average_from_subject(self, id, subject):
+		return sum(self.register[id][subject]["grades"])/float(len(self.register[id][subject]["grades"]))
 
-	
-	def __init__(self, subject_name, id):
-		self.subject_name = subject_name
-		self.subject_id = id
-		self.students_ids= []
-		self.grades = []
-		self.number_of_grades = 0
-		self.number_of_classes = 0
-		self.present = []
+	def student_average_from_all_classes(self, id):
+		ret = 0
+		for key in self.register[id].keys():
+			ret += self.student_average_from_subject(id,key)
+		return ret/len(self.register[id].keys())
 
-	def enroll_students(self, students_ids):
-		self.students_ids = students_ids
+	def average_from_subject(self,subject):
+		ret = 0
+		for key in self.register.keys():
+			ret += self.student_average_from_subject(key,subject)
+		return ret/len(self.register)
 
-	def get_average_of_students(self):
-		pass
+	def total_attendance_of_a_student(self,id):
+		ret = 0
+		for key in self.register[id].keys():
+			ret += sum(self.register[id][key]["presence"])/float(len(self.register[id][key]["presence"]))
+		return ret/len(self.register[id].keys())
 
-	def input_grades(self, grades):
-		self.number_of_grades += 1
-		self.grades.append(grades)
-	def check_attendance(self, attendance)
-		self.number_of_classes += 1
-		self.present.append(grades)
-		
+	def save(self, filename):
+		with open(filename, 'w') as save_file:
+			json.dump(self.__dict__, save_file)
+
+
+
+
+
+
+
+
+
+
+
+
+### <- 50 lines from the beggining of the Class code 8-)
+
+if __name__ == "__main__":
+
+
+	filename= str(sys.argv[1])
+
+	subjects = ["Python"]
+	students = ["Andrzej Duda", "Kubus Puchatek", "Seba"]
+	D = Class(subjects,students)
+	D.add_grade("Andrzej Duda","Python",2)
+	D.add_grade("Kubus Puchatek","Python",3)
+	D.add_grade("Seba","Python",4)
+	D.add_grade("Andrzej Duda","Python",2)
+	D.add_grade("Kubus Puchatek","Python",3)
+	D.add_grade("Seba","Python",4)
+	D.check_presence("Andrzej Duda","Python",0)
+	D.check_presence("Kubus Puchatek","Python",1)
+	D.check_presence("Seba","Python",1)
+	D.check_presence("Andrzej Duda","Python",0)
+	D.check_presence("Kubus Puchatek","Python",1)
+	D.check_presence("Seba","Python",0)
+
+
+	for student in students:
+		print student + " average from all classes " + str(D.student_average_from_all_classes(student))
+		print student + " total attendance " + str(D.total_attendance_of_a_student(student))
+		for subject in subjects:
+			print student + " average from " + subject + " " + str(D.student_average_from_subject(student,subject))
+
+	for subject in subjects:
+		print "Average from " + subject + ": " + str(D.average_from_subject(subject))
+
+	print "Class will be saved in a file " + filename
+	D.save(filename)
